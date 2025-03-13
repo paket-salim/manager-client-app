@@ -1,0 +1,65 @@
+body {
+    font-family: 'Fira Sans', sans-serif;
+    background: linear-gradient(#7CBAF9, #7FACAC);
+    margin: 0;
+    padding: 20px;
+    color: #01203F;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+button {
+    margin: 5px;
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.manager-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.manager-card {
+    background-color: #CBDFF4;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 300px;
+}
+
+.manager-card h3 {
+    margin: 0 0 8px 0;
+}
+
+.manager-card p, .manager-card h4 {
+    margin: 4px 0;
+}
+
+.manager-card ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.manager-card li {
+    margin: 4px 0;
+    background: #93C4F5;
+    padding: 5px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
