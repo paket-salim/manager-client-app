@@ -89,6 +89,7 @@ exports.getManagerById = async (req, res) => {
 exports.updateManager = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log("Ошибки валидации:", errors.array());
     return res.status(400).json({ errors: errors.array() });
   }
 
@@ -98,33 +99,33 @@ exports.updateManager = async (req, res) => {
   console.log("Получен запрос на обновление менеджера:", { id, fullName, serviceProfileId });
 
   try {
-    // Проверяем, существует ли профиль обслуживания
-    const profile = await pool.query('SELECT * FROM service_profiles WHERE id = $1', [serviceProfileId]);
-    if (profile.rows.length === 0) {
-      return res.status(400).json({ error: 'Указанный профиль обслуживания не существует.' });
+    // Проверяем существование профиля обслуживания
+    const profileResult = await pool.query(
+      'SELECT * FROM service_profiles WHERE id = $1',
+      [serviceProfileId]
+    );
+
+    if (profileResult.rows.length === 0) {
+      console.log("Профиль обслуживания не найден");
+      return res.status(404).json({ error: 'Профиль обслуживания не найден.' });
     }
 
-    // // Получаем всех клиентов данного менеджера
-    // const clientsResult = await pool.query(`
-    //   SELECT id, company_name, legal_form, service_profile_id
-    //   FROM clients
-    //   WHERE assigned_manager_id = $1
-    // `, [id]);
+    // Проверяем наличие клиентов у менеджера
+    const clientsResult = await pool.query(
+      'SELECT * FROM clients WHERE assigned_manager_id = $1',
+      [id]
+    );
 
-    // const clients = clientsResult.rows;
-    // const clientCount = clients.length;
+    const clients = clientsResult.rows;
 
-    // // Проверяем на совместимость профилей клиентов с новым профилем менеджера
-    // for (const client of clients) {
-    //   if (client.service_profile_id !== serviceProfileId) {
-    //     return res.status(400).json({
-    //       error: `Невозможно изменить профиль обслуживания менеджера, поскольку у клиента "${client.company_name}" несовместимый профиль.`,
-    //     });
-    //   }
-    // }
-
-    // Извлекаем имя профиля из результата запроса
-    const profileName = profile.rows[0].name;
+    // Если у менеджера есть клиенты с несовместимыми профилями
+    const incompatibleClients = clients.filter(client => client.service_profile_id !== serviceProfileId);
+    if (incompatibleClients.length > 0) {
+      console.log("Менеджер имеет клиентов с другим профилем обслуживания.");
+      return res.status(400).json({
+        error: 'Нельзя изменить профиль менеджера, так как у него есть клиенты с другим профилем обслуживания.'
+      });
+    }
 
     // Обновляем данные менеджера
     const result = await pool.query(
@@ -139,13 +140,13 @@ exports.updateManager = async (req, res) => {
 
     // Добавляем имя профиля к возвращаемому объекту
     const updatedManager = result.rows[0];
-    updatedManager.profile_name = profileName;
+    updatedManager.profile_name = profileResult.rows[0].name;
 
     console.log("Менеджер успешно обновлён:", updatedManager);
-    res.status(200).json(result.rows[0]);
+    res.status(200).json(updatedManager);
   } catch (error) {
-    console.error('Ошибка при обновлении менеджера:', error.message);
-    res.status(500).json({ error: 'Ошибка при обновлении менеджера.' });
+    console.error("Ошибка при обновлении менеджера:", error.message);
+    res.status(500).json({ error: "Ошибка при обновлении менеджера." });
   }
 };
 
